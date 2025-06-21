@@ -1,2 +1,5 @@
 langchain-google-community\[gmail\]
+langchain-core==0.3.65
+langchain-groq==0.3.2
+python-dotenv==1.1.0
 
