@@ -18,29 +18,28 @@ def get_new_messages_since_history(gmail_service, user_id, start_history_id):
         for record in history['history']:
             if 'messagesAdded' in record:
                 for msg in record['messagesAdded']:
-                    messages.append(msg['message']['id'])
+                    message_id = msg['message']['id']
+                    full_msg = gmail_service.users().messages().get(userId='me', id=message_id, format='metadata').execute()
+                    if 'INBOX' in full_msg.get('labelIds', []):  # Nur echte eingehende Mails
+                        messages.append(message_id)
 
     return messages
-
 
 class MailPubSub:
 
     def __init__(self):
-        # Gmail API – über OAuth2 Token (token-2.json)
         gmail_creds = Credentials.from_authorized_user_file('token.json', ['https://mail.google.com/'])
         self.gmail_service = build('gmail', 'v1', credentials=gmail_creds)
 
-        # Nur beim ersten Start nötig – ansonsten auskommentieren!
         watch_request = {
             'labelIds': ['INBOX'],
             'topicName': 'projects/noah-ai-agent/topics/gmail-notify'
         }
         response = self.gmail_service.users().watch(userId='me', body=watch_request).execute()
-        print("✅ Watch aktiviert:", response)
+        print("✅ Watch activated:", response)
         self.last_processed_history_id = int(response['historyId'])
         self.gmail_get_message = GmailGetMessage()
 
-        # Pub/Sub API – mit Service Account (z. B. service-account.json)
         pubsub_creds = service_account.Credentials.from_service_account_file("service-account.json")
         self.subscriber = pubsub_v1.SubscriberClient(credentials=pubsub_creds)
         self.subscription_path = self.subscriber.subscription_path('noah-ai-agent', 'gmail-notify-sub')
@@ -52,19 +51,17 @@ class MailPubSub:
 
             history_id = json_data.get("historyId")
             email_address = json_data.get("emailAddress")
-            if email_address != "sysad.project.ws2425@gmail.com":
-                print(f"📬 Gmail-Aktivität erkannt: {email_address}, History ID: {history_id}")
+            print(f"📬 Gmail-Update: {email_address}, History ID: {history_id}")
 
-                new_message_ids = get_new_messages_since_history(self.gmail_service, 'me', self.last_processed_history_id)
-                print(new_message_ids)
-                for ids in new_message_ids:
-                    message_id = ids
-                    print("E-Mail ID:", ids)
+            new_message_ids = get_new_messages_since_history(self.gmail_service, 'me', self.last_processed_history_id)
+            print(new_message_ids)
+            for ids in new_message_ids:
+                print("E-Mail ID:", ids)
 
-                self.last_processed_history_id = history_id
+            self.last_processed_history_id = history_id
 
         except Exception as e:
-            print("Fehler:", e)
+            print("Error:", e)
         finally:
             message.ack()
 
