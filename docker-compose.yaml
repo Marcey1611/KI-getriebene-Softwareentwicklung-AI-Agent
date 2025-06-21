@@ -1,0 +1,6 @@
+services:
+  ai-mail-agent:
+    build: .
+    env_file:
+      .env
+    command: tail -f /dev/null
