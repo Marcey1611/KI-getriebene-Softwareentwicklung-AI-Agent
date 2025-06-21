@@ -44,6 +44,7 @@ class MailPubSub:
         pubsub_creds = service_account.Credentials.from_service_account_file("service-account.json")
         self.subscriber = pubsub_v1.SubscriberClient(credentials=pubsub_creds)
         self.subscription_path = self.subscriber.subscription_path('noah-ai-agent', 'gmail-notify-sub')
+        print("Done Init")
 
     def callback(self,message):
         try:
@@ -66,10 +67,8 @@ class MailPubSub:
             message.ack()
 
     def spinup_subscription(self):
-
         streaming_pull_future = self.subscriber.subscribe(self.subscription_path, callback=self.callback)
         print("Listening for messages...")
-
         try:
             streaming_pull_future.result()
         except KeyboardInterrupt:
