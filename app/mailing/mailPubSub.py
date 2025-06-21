@@ -3,26 +3,8 @@ from google.oauth2.credentials import Credentials
 from google.oauth2 import service_account
 from google.cloud import pubsub_v1
 import json
+from langchain_google_community.gmail.get_message import GmailGetMessage
 
-
-
-# Gmail API – über OAuth2 Token (token-2.json)
-gmail_creds = Credentials.from_authorized_user_file('token.json', ['https://www.googleapis.com/auth/gmail.readonly'])
-gmail_service = build('gmail', 'v1', credentials=gmail_creds)
-
-# Nur beim ersten Start nötig – ansonsten auskommentieren!
-watch_request = {
-    'labelIds': ['INBOX'],
-    'topicName': 'projects/noah-ai-agent/topics/gmail-notify'
-}
-response = gmail_service.users().watch(userId='me', body=watch_request).execute()
-print("✅ Watch aktiviert:", response)
-last_processed_history_id = int(response['historyId'])
-
-# Pub/Sub API – mit Service Account (z. B. service-account.json)
-pubsub_creds = service_account.Credentials.from_service_account_file("service-account.json")
-subscriber = pubsub_v1.SubscriberClient(credentials=pubsub_creds)
-subscription_path = subscriber.subscription_path('noah-ai-agent', 'gmail-notify-sub')
 
 def get_new_messages_since_history(gmail_service, user_id, start_history_id):
     history = gmail_service.users().history().list(
@@ -41,38 +23,64 @@ def get_new_messages_since_history(gmail_service, user_id, start_history_id):
     return messages
 
 
-def callback(message):
-    global last_processed_history_id
+class MailPubSub:
 
-    try:
-        decoded_text = message.data.decode("utf-8")
-        json_data = json.loads(decoded_text)
+    def __init__(self):
+        # Gmail API – über OAuth2 Token (token-2.json)
+        gmail_creds = Credentials.from_authorized_user_file('token.json', ['https://mail.google.com/'])
+        self.gmail_service = build('gmail', 'v1', credentials=gmail_creds)
 
-        history_id = json_data.get("historyId")
-        email_address = json_data.get("emailAddress")
+        # Nur beim ersten Start nötig – ansonsten auskommentieren!
+        watch_request = {
+            'labelIds': ['INBOX'],
+            'topicName': 'projects/noah-ai-agent/topics/gmail-notify'
+        }
+        response = self.gmail_service.users().watch(userId='me', body=watch_request).execute()
+        print("✅ Watch aktiviert:", response)
+        self.last_processed_history_id = int(response['historyId'])
+        self.gmail_get_message = GmailGetMessage()
 
-        print(f"📬 Gmail-Aktivität erkannt: {email_address}, History ID: {history_id}")
+        # Pub/Sub API – mit Service Account (z. B. service-account.json)
+        pubsub_creds = service_account.Credentials.from_service_account_file("service-account.json")
+        self.subscriber = pubsub_v1.SubscriberClient(credentials=pubsub_creds)
+        self.subscription_path = self.subscriber.subscription_path('noah-ai-agent', 'gmail-notify-sub')
 
-        new_message_ids = get_new_messages_since_history(gmail_service, 'me', last_processed_history_id)
-        print(new_message_ids)
+    def callback(self,message):
+        try:
+            decoded_text = message.data.decode("utf-8")
+            json_data = json.loads(decoded_text)
 
-        last_processed_history_id = history_id
+            history_id = json_data.get("historyId")
+            email_address = json_data.get("emailAddress")
+            if email_address != "sysad.project.ws2425@gmail.com":
+                print(f"📬 Gmail-Aktivität erkannt: {email_address}, History ID: {history_id}")
 
-    except Exception as e:
-        print("Fehler:", e)
-    finally:
-        message.ack()
+                new_message_ids = get_new_messages_since_history(self.gmail_service, 'me', self.last_processed_history_id)
+                print(new_message_ids)
+                for ids in new_message_ids:
+                    message_id = ids
+                    print("E-Mail ID:", ids)
 
-def spinup_subscription():
+                self.last_processed_history_id = history_id
 
-    streaming_pull_future = subscriber.subscribe(subscription_path, callback=callback)
-    print("Listening for messages...")
+        except Exception as e:
+            print("Fehler:", e)
+        finally:
+            message.ack()
 
-    try:
-        streaming_pull_future.result()
-    except KeyboardInterrupt:
-        streaming_pull_future.cancel()
-    except BaseException as e:
-        spinup_subscription()
+    def spinup_subscription(self):
 
-spinup_subscription()
+        streaming_pull_future = self.subscriber.subscribe(self.subscription_path, callback=self.callback)
+        print("Listening for messages...")
+
+        try:
+            streaming_pull_future.result()
+        except KeyboardInterrupt:
+            streaming_pull_future.cancel()
+
+def main():
+    pub_sub=MailPubSub()
+    pub_sub.spinup_subscription()
+
+if __name__ == '__main__':
+    main()
