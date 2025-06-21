@@ -54,10 +54,9 @@ class MailPubSub:
             print(f"📬 Gmail-Update: {email_address}, History ID: {history_id}")
 
             new_message_ids = get_new_messages_since_history(self.gmail_service, 'me', self.last_processed_history_id)
-            print(new_message_ids)
             for ids in new_message_ids:
                 print("E-Mail ID:", ids)
-
+                # there should be the AI-Call
             self.last_processed_history_id = history_id
 
         except Exception as e:
