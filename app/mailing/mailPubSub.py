@@ -4,6 +4,7 @@ from google.oauth2 import service_account
 from google.cloud import pubsub_v1
 import json
 from langchain_google_community.gmail.get_message import GmailGetMessage
+from app.tools.agent_runner import run_agent
 
 
 def get_new_messages_since_history(gmail_service, user_id, start_history_id):
@@ -56,7 +57,7 @@ class MailPubSub:
             new_message_ids = get_new_messages_since_history(self.gmail_service, 'me', self.last_processed_history_id)
             for ids in new_message_ids:
                 print("E-Mail ID:", ids)
-                # there should be the AI-Call
+                run_agent(ids)
             self.last_processed_history_id = history_id
 
         except Exception as e:
