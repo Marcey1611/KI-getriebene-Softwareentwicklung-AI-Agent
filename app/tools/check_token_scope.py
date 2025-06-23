@@ -1,7 +1,7 @@
 import json
 import os
 
-TOKEN_PATH = "app/mailing/token.json"
+TOKEN_PATH = os.getenv("GOOGLE_MAIL_TOKEN")
 
 if not os.path.exists(TOKEN_PATH):
     print("❌ Keine token.json gefunden.")

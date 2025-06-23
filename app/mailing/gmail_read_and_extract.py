@@ -8,7 +8,7 @@ from langchain_google_community.gmail.utils import (
 )
 
 # 🔧 Pfad für tools
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+#sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from tools.extract_appointment import extract_appointment_from_text
 
@@ -16,8 +16,8 @@ load_dotenv()
 
 # 🔐 Authentifiziere mit Google einmalig beim Laden
 credentials = get_gmail_credentials(
-    token_file=os.path.join(os.path.dirname(__file__), "token.json"),
-    client_secrets_file=os.path.join(os.path.dirname(__file__), "credentials.json"),
+    token_file=os.getenv("GOOGLE_MAIL_TOKEN"),
+    client_secrets_file=os.getenv("GOOGLE_CREDENTIALS"),
     scopes=["https://mail.google.com/"],  # WICHTIG: voller Zugriff
 )
 

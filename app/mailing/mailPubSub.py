@@ -5,6 +5,9 @@ from google.cloud import pubsub_v1
 import json
 from langchain_google_community.gmail.get_message import GmailGetMessage
 from app.tools.agent_runner import run_agent
+from langchain_google_community.gmail.utils import get_gmail_credentials, build_resource_service
+from langchain_google_community.gmail.get_message import GmailGetMessage
+import os
 
 
 def get_new_messages_since_history(gmail_service, user_id, start_history_id):
@@ -29,8 +32,16 @@ def get_new_messages_since_history(gmail_service, user_id, start_history_id):
 class MailPubSub:
 
     def __init__(self):
-        gmail_creds = Credentials.from_authorized_user_file('token.json', ['https://mail.google.com/'])
-        self.gmail_service = build('gmail', 'v1', credentials=gmail_creds)
+        gmail_creds = get_gmail_credentials(
+            token_file=os.getenv("GOOGLE_MAIL_TOKEN"),
+            client_secrets_file=os.getenv("GOOGLE_CREDENTIALS"),
+            scopes=["https://mail.google.com/"]
+        )
+        gmail_service = build_resource_service(gmail_creds)
+        self.gmail_service = gmail_service
+
+        self.gmail_get_message = GmailGetMessage(api_resource=self.gmail_service)
+
 
         watch_request = {
             'labelIds': ['INBOX'],
@@ -39,9 +50,8 @@ class MailPubSub:
         response = self.gmail_service.users().watch(userId='me', body=watch_request).execute()
         print("✅ Watch activated:", response)
         self.last_processed_history_id = int(response['historyId'])
-        self.gmail_get_message = GmailGetMessage()
 
-        pubsub_creds = service_account.Credentials.from_service_account_file("service-account.json")
+        pubsub_creds = service_account.Credentials.from_service_account_file(os.getenv("GOOGLE_SERVICE_ACCOUNT"))
         self.subscriber = pubsub_v1.SubscriberClient(credentials=pubsub_creds)
         self.subscription_path = self.subscriber.subscription_path('noah-ai-agent', 'gmail-notify-sub')
         print("Done Init")

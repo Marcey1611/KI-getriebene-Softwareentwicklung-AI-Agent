@@ -15,8 +15,8 @@ from langchain_google_community.gmail.utils import (
 
 # 🔐 .env laden
 load_dotenv()
-api_key = os.getenv("GROQ_API_KEY")#
-openai_key ="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"
+api_key = os.getenv("GROQ_API_KEY")
+openai_key = os.getenv("OPENAI_API_KEY")
 
 # 🧠 LLM initialisieren
 #llm = ChatGroq(api_key=api_key, model="llama3-8b-8192")
@@ -25,8 +25,8 @@ llm =  ChatOpenAI(api_key=openai_key,)
 
 # 🛠️ Gmail Toolkit vorbereiten
 credentials = get_gmail_credentials(
-    token_file=os.path.join(os.path.dirname(__file__), "../mailing/token.json"),
-    client_secrets_file=os.path.join(os.path.dirname(__file__), "../mailing/credentials.json"),
+    token_file=os.getenv("GOOGLE_MAIL_TOKEN"),
+    client_secrets_file=os.getenv("GOOGLE_CREDENTIALS"),
     scopes=["https://mail.google.com/"],
 )
 resource = build_resource_service(credentials=credentials)
@@ -66,14 +66,24 @@ extract_tool = Tool(
     description="Analysiert eine E-Mail und extrahiert Termin-Infos wie Datum, Uhrzeit, Ort."
 )
 
-create_event_via_llm_function = Tool(
+create_event_tool = Tool(
     name="create_event_via_llm",
-    description="Erstellt einen Kalendereintrag aus einem JSON",
     func=create_event_from_json,
+    description=(
+        "Erstellt einen Google-Kalendertermin. "
+        "Eingabe ist ein gültiges JSON mit folgenden Feldern:\n"
+        "- summary (z. B. 'Meeting mit Anna' hier soll also der Titel des Kalendereintrages rein.)\n"
+        "- start_datetime (z. B. '2025-06-24T10:00:00+02:00' hier soll also der Beginn des Kalendereintrages rein.)\n"
+        "- end_datetime (z. B. '2025-06-24T11:00:00+02:00' hier soll also das Ende des Kalendereintrages rein.)\n"
+        "- timezone (z. B. 'Europe/Berlin' hier soll also die Zeitzone des Kalendereintrages rein.)\n"
+        "- location (z. B. 'Berlin' hier soll also der Ort des Kalendereintrages rein.)\n"
+        "Bitte gebe als Parameter nur ein valides JSON, beginnen und endend mit einer geschweiften Klammer, mit keine sonstigen EIngaben von dir!"
+
+    )
 )
 # 🤖 Agent bauen
 agent = initialize_agent(
-    tools=[search_gmail_tool, get_gmail_message_tool, extract_tool,create_event_via_llm_function],
+    tools=[search_gmail_tool, get_gmail_message_tool, extract_tool,create_event_tool],
     llm=llm,
     agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
     verbose=True,
