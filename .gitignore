@@ -3,4 +3,4 @@ __pycache__/
 
 /ai_agent_config/*
 
-.env
+.env/
