@@ -1,6 +1,6 @@
 __pycache__/
 *.py[cod]
 
-/config/*
+/ai_agent_config/*
 
 .env
