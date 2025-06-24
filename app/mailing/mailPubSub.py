@@ -1,7 +1,7 @@
 from google.oauth2 import service_account
 from google.cloud import pubsub_v1
 import json
-from app.tools.agent_runner import run_agent
+from app.tools.agent_runner import run_agent, run_agent_executor
 from langchain_google_community.gmail.utils import get_gmail_credentials, build_resource_service
 from langchain_google_community.gmail.get_message import GmailGetMessage
 import os
@@ -68,7 +68,7 @@ class MailPubSub:
             new_message_ids = get_new_messages_since_history(self.gmail_service, 'me', self.last_processed_history_id)
             for ids in new_message_ids:
                 print("E-Mail ID:", ids)
-                run_agent(ids)
+                run_agent_executor(ids)
             self.last_processed_history_id = history_id
 
         except Exception as e:
