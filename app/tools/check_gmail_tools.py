@@ -8,8 +8,8 @@ from langchain_google_community.gmail.utils import (
 BASE = "app/mailing"
 
 credentials = get_gmail_credentials(
-    token_file=os.path.join(BASE, "token.json"),
-    client_secrets_file=os.path.join(BASE, "credentials.json"),
+    token_file=os.getenv("GOOGLE_MAIL_TOKEN"),
+    client_secrets_file=os.getenv("GOOGLE_CREDENTIALS"),
     scopes=["https://mail.google.com/"]
 )
 

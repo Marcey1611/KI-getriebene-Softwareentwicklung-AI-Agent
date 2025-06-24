@@ -10,9 +10,9 @@ from langchain_google_community.gmail.utils import (
 # Can review scopes here https://developers.google.com/gmail/api/auth/scopes
 # For instance, readonly scope is 'https://www.googleapis.com/auth/gmail.readonly'
 credentials = get_gmail_credentials(
-    token_file="token.json",
+    token_file=os.getenv("GOOGLE_MAIL_TOKEN"),
     scopes=["https://mail.google.com/"],
-    client_secrets_file="credentials.json",
+    client_secrets_file=os.getenv("GOOGLE_CREDENTIALS"),
 )
 api_resource = build_resource_service(credentials=credentials)
 toolkit = GmailToolkit(api_resource=api_resource)

@@ -15,10 +15,15 @@ llm = ChatGroq(api_key=api_key, model="llama3-8b-8192")
 # Prompt definieren
 prompt = PromptTemplate.from_template("""
 Du bekommst eine E-Mail und sollst daraus folgende Felder im Klartext extrahieren:
-- Titel des Termins
-- Datum (z. B. 21. Juni 2025)
-- Uhrzeit (z. B. 14:30 Uhr)
-- Ort (wenn vorhanden)
+- summary (Titel des Termins)
+- start_datetime (z.B. 2025-06-25T10:00:00+02:00)
+- end_datetime (z.B. 2025-06-25T10:00:00+02:00)
+- timezone(default Berlin)
+- location (wenn vorhanden)
+- description (Von wem kommt die Mail und was wird passieren)
+und das bitte als Json.
+Mach das bitte auch wenn das nicht direkt ein Termin sondern eine Einladung ist.
+Wenn nichts von einem ende drin steht dann überlege dir wie lange so ein Termin in der regel dauert.
 
 E-Mail:
 "{email}"

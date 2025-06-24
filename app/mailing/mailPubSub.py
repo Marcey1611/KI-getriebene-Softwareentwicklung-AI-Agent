@@ -1,10 +1,11 @@
-from googleapiclient.discovery import build
-from google.oauth2.credentials import Credentials
 from google.oauth2 import service_account
 from google.cloud import pubsub_v1
 import json
-from langchain_google_community.gmail.get_message import GmailGetMessage
 from app.tools.agent_runner import run_agent
+from langchain_google_community.gmail.utils import get_gmail_credentials, build_resource_service
+from langchain_google_community.gmail.get_message import GmailGetMessage
+import os
+from google.api_core.client_options import ClientOptions
 
 
 def get_new_messages_since_history(gmail_service, user_id, start_history_id):
@@ -29,8 +30,16 @@ def get_new_messages_since_history(gmail_service, user_id, start_history_id):
 class MailPubSub:
 
     def __init__(self):
-        gmail_creds = Credentials.from_authorized_user_file('token.json', ['https://mail.google.com/'])
-        self.gmail_service = build('gmail', 'v1', credentials=gmail_creds)
+        gmail_creds = get_gmail_credentials(
+            token_file=os.getenv("GOOGLE_MAIL_TOKEN"),
+            client_secrets_file=os.getenv("GOOGLE_CREDENTIALS"),
+            scopes=["https://mail.google.com/"]
+        )
+        gmail_service = build_resource_service(gmail_creds)
+        self.gmail_service = gmail_service
+
+        self.gmail_get_message = GmailGetMessage(api_resource=self.gmail_service)
+
 
         watch_request = {
             'labelIds': ['INBOX'],
@@ -39,11 +48,13 @@ class MailPubSub:
         response = self.gmail_service.users().watch(userId='me', body=watch_request).execute()
         print("✅ Watch activated:", response)
         self.last_processed_history_id = int(response['historyId'])
-        self.gmail_get_message = GmailGetMessage()
 
-        pubsub_creds = service_account.Credentials.from_service_account_file("service-account.json")
-        self.subscriber = pubsub_v1.SubscriberClient(credentials=pubsub_creds)
+        pubsub_creds = service_account.Credentials.from_service_account_file(os.getenv("GOOGLE_SERVICE_ACCOUNT"))
+
+        client_options = ClientOptions(api_endpoint="pubsub.googleapis.com:443")
+        self.subscriber = pubsub_v1.SubscriberClient(credentials=pubsub_creds,client_options=client_options)
         self.subscription_path = self.subscriber.subscription_path('noah-ai-agent', 'gmail-notify-sub')
+        print("Done Init")
 
     def callback(self,message):
         try:
@@ -66,18 +77,10 @@ class MailPubSub:
             message.ack()
 
     def spinup_subscription(self):
-
         streaming_pull_future = self.subscriber.subscribe(self.subscription_path, callback=self.callback)
         print("Listening for messages...")
-
         try:
             streaming_pull_future.result()
         except KeyboardInterrupt:
             streaming_pull_future.cancel()
 
-def main():
-    pub_sub=MailPubSub()
-    pub_sub.spinup_subscription()
-
-if __name__ == '__main__':
-    main()
