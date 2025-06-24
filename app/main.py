@@ -1,9 +1,8 @@
-from tools.extract_appointment import extract_appointment
+from app.mailing.mailPubSub import MailPubSub
 
-text = """Hallo Max,
-wir bestätigen deinen Vorstellungstermin am 21. Juni 2025 um 14:30 Uhr
-in unserem Büro in Ravensburg."""
+def main():
+    pub_sub=MailPubSub()
+    pub_sub.spinup_subscription()
 
-result = extract_appointment(text)
-print("📅 Ergebnis:")
-print(result)
+if __name__ == '__main__':
+    main()

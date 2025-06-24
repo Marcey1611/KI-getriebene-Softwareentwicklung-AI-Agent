@@ -1,6 +1,9 @@
 services:
   ai-mail-agent:
     build: .
+    volumes:
+      - ./app:/app
+      - ./ai_agent_config:/ai_agent_config
     env_file:
       .env
-    command: tail -f /dev/null
+    command: python -m app.main

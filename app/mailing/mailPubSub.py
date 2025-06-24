@@ -1,13 +1,11 @@
-from googleapiclient.discovery import build
-from google.oauth2.credentials import Credentials
 from google.oauth2 import service_account
 from google.cloud import pubsub_v1
 import json
-from langchain_google_community.gmail.get_message import GmailGetMessage
 from app.tools.agent_runner import run_agent
 from langchain_google_community.gmail.utils import get_gmail_credentials, build_resource_service
 from langchain_google_community.gmail.get_message import GmailGetMessage
 import os
+from google.api_core.client_options import ClientOptions
 
 
 def get_new_messages_since_history(gmail_service, user_id, start_history_id):
@@ -52,7 +50,9 @@ class MailPubSub:
         self.last_processed_history_id = int(response['historyId'])
 
         pubsub_creds = service_account.Credentials.from_service_account_file(os.getenv("GOOGLE_SERVICE_ACCOUNT"))
-        self.subscriber = pubsub_v1.SubscriberClient(credentials=pubsub_creds)
+
+        client_options = ClientOptions(api_endpoint="pubsub.googleapis.com:443")
+        self.subscriber = pubsub_v1.SubscriberClient(credentials=pubsub_creds,client_options=client_options)
         self.subscription_path = self.subscriber.subscription_path('noah-ai-agent', 'gmail-notify-sub')
         print("Done Init")
 
@@ -84,9 +84,3 @@ class MailPubSub:
         except KeyboardInterrupt:
             streaming_pull_future.cancel()
 
-def main():
-    pub_sub=MailPubSub()
-    pub_sub.spinup_subscription()
-
-if __name__ == '__main__':
-    main()

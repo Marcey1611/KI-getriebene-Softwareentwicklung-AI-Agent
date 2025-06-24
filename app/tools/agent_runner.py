@@ -19,8 +19,8 @@ api_key = os.getenv("GROQ_API_KEY")
 openai_key = os.getenv("OPENAI_API_KEY")
 
 # 🧠 LLM initialisieren
-#llm = ChatGroq(api_key=api_key, model="llama3-8b-8192")
-llm =  ChatOpenAI(api_key=openai_key,)
+llm = ChatGroq(api_key=api_key, model="llama3-8b-8192")
+#llm =  ChatOpenAI(api_key=openai_key,)
 
 
 # 🛠️ Gmail Toolkit vorbereiten
@@ -58,7 +58,7 @@ def get_gmail_message_tool(message_id: str) -> str:
 
 # 🧩 Eigenes Analyse-Tool
 from app.tools.extract_appointment import extract_appointment_from_text
-from app.calendar.calendar_tool import create_event_from_json
+from app.custom_calendar_tools.calendar_tool import create_event_from_json
 
 extract_tool = Tool(
     name="extract_appointment",
