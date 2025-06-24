@@ -19,8 +19,8 @@ api_key = os.getenv("GROQ_API_KEY")
 openai_key = os.getenv("OPENAI_API_KEY")
 
 # 🧠 LLM initialisieren
-llm = ChatGroq(api_key=api_key, model="llama3-8b-8192")
-#llm =  ChatOpenAI(api_key=openai_key,)
+#llm = ChatGroq(api_key=api_key, model="llama3-8b-8192")
+llm =  ChatOpenAI(api_key=openai_key,)
 
 
 # 🛠️ Gmail Toolkit vorbereiten
@@ -77,6 +77,7 @@ create_event_tool = Tool(
         "- end_datetime (z. B. '2025-06-24T11:00:00+02:00' hier soll also das Ende des Kalendereintrages rein.)\n"
         "- timezone (z. B. 'Europe/Berlin' hier soll also die Zeitzone des Kalendereintrages rein.)\n"
         "- location (z. B. 'Berlin' hier soll also der Ort des Kalendereintrages rein.)\n"
+        "- description (z. B. 'Dies ist eine Erinnerung an das Meeting mit Anna.' hier soll also die Beschreibung des Kalendereintrages rein.)\n"
         "Bitte gebe als Parameter nur ein valides JSON, beginnen und endend mit einer geschweiften Klammer, mit keine sonstigen EIngaben von dir!"
 
     )

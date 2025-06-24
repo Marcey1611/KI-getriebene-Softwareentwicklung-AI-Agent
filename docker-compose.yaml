@@ -6,4 +6,4 @@ services:
       - ./ai_agent_config:/ai_agent_config
     env_file:
       .env
-    command: python -m app.main
+    command: python -u -m app.main
