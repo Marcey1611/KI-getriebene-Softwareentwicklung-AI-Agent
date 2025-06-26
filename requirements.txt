@@ -4,6 +4,7 @@ langchain_google_community
 langchain-google-community[gmail]
 langchain_groq
 langchain_openai
+langchain_ollama
 langgraph
 protobuf
 python-dotenv
