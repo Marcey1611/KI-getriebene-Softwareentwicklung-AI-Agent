@@ -1,12 +1,14 @@
 from google.oauth2 import service_account
 from google.cloud import pubsub_v1
 import json
-from app.tools.agent_runner import run_agent, run_agent_executor
+from app.tools.agent_runner import run_agent_executor
 from langchain_google_community.gmail.utils import get_gmail_credentials, build_resource_service
 from langchain_google_community.gmail.get_message import GmailGetMessage
 import os
 from google.api_core.client_options import ClientOptions
 
+
+processed_message_ids = set()
 
 def get_new_messages_since_history(gmail_service, user_id, start_history_id):
     history = gmail_service.users().history().list(
@@ -21,9 +23,12 @@ def get_new_messages_since_history(gmail_service, user_id, start_history_id):
             if 'messagesAdded' in record:
                 for msg in record['messagesAdded']:
                     message_id = msg['message']['id']
+                    if message_id in processed_message_ids:
+                        continue  # Schon verarbeitet -> überspringen
                     full_msg = gmail_service.users().messages().get(userId='me', id=message_id, format='metadata').execute()
                     if 'INBOX' in full_msg.get('labelIds', []):  # Nur echte eingehende Mails
                         messages.append(message_id)
+                        processed_message_ids.add(message_id)
 
     return messages
 
@@ -51,7 +56,7 @@ class MailPubSub:
 
         pubsub_creds = service_account.Credentials.from_service_account_file(os.getenv("GOOGLE_SERVICE_ACCOUNT"))
 
-        client_options = ClientOptions(api_endpoint="pubsub.googleapis.com:443")
+        client_options = ClientOptions(api_endpoint="pubsub.googleapis.com")
         self.subscriber = pubsub_v1.SubscriberClient(credentials=pubsub_creds,client_options=client_options)
         self.subscription_path = self.subscriber.subscription_path('noah-ai-agent', 'gmail-notify-sub')
         print("Done Init")
@@ -83,4 +88,3 @@ class MailPubSub:
             streaming_pull_future.result()
         except KeyboardInterrupt:
             streaming_pull_future.cancel()
-

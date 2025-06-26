@@ -8,13 +8,13 @@ import os
 
 cal_credentials = get_google_credentials(
     token_file=os.getenv("GOOGLE_CALENDAR_TOKEN"),
-    scopes=["https://www.googleapis.com/auth/calendar.events"],
+    scopes=["https://www.googleapis.com/auth/calendar"],
     client_secrets_file=os.getenv("GOOGLE_CREDENTIALS")
 )
 
 service = build_resource_service(cal_credentials)
-toolkit = CalendarToolkit(api_resource=service)
-calendar_tool = [t for t in toolkit.get_tools() if t.name == "create_calendar_event"][0]
+cal_toolkit = CalendarToolkit(api_resource=service)
+calendar_tool = [t for t in cal_toolkit.get_tools() if t.name == "create_calendar_event"][0]
 
 
 def create_event_via_llm(summary: str, start_datetime: str, end_datetime: str, timezone: str, location: str,description:str=None) -> str:
