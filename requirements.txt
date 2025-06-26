@@ -11,3 +11,4 @@ Requests
 google.cloud
 google.api_core
 google-cloud-pubsub
+faiss-cpu

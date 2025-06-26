@@ -5,6 +5,9 @@ from langchain_core.tools import tool
 from datetime import datetime
 import json
 import os
+from app.rag.rag_calendar import load_vectorstore
+
+FAISS_INDEX_PATH = "calendar_faiss_index"
 
 cal_credentials = get_google_credentials(
     token_file=os.getenv("GOOGLE_CALENDAR_TOKEN"),
@@ -21,6 +24,8 @@ def create_event_via_llm(summary: str, start_datetime: str, end_datetime: str, t
     try:
         start = datetime.fromisoformat(start_datetime).strftime("%Y-%m-%d %H:%M:%S")
         end = datetime.fromisoformat(end_datetime).strftime("%Y-%m-%d %H:%M:%S")
+        print(start)
+        print(timezone)
         return calendar_tool.invoke({
             "summary": summary,
             "start_datetime": start,
@@ -32,6 +37,17 @@ def create_event_via_llm(summary: str, start_datetime: str, end_datetime: str, t
         })
     except Exception:
         return "Error creating calendar event."
+    finally:
+        try:
+            vectorstore = load_vectorstore()
+            text = f"{start_datetime}\n{summary}\n{description}\n{location}"
+            vectorstore.add_texts([text])
+            vectorstore.save_local(folder_path=FAISS_INDEX_PATH)
+        except Exception as e:
+            print(f"❗ Fehler beim Hinzufügen zum Vektor-Store: {e}")
+        print_all_vectorstore_texts()
+    
+       
     
 @tool
 def create_event_from_json(json_payload) -> str:
@@ -76,3 +92,9 @@ def extract_clean_json(s: str) -> str | None:
                 return s[:i+1]  # inkl. letzter geschlossener Klammer
 
     return None  # Falls nie geschlossen
+
+def print_all_vectorstore_texts():
+    vectorstore = load_vectorstore()
+    results = vectorstore.similarity_search("", k=100)  # oder ein anderer allgemeiner Begriff
+    for i, doc in enumerate(results, 1):
+        print(f"\n📄 Event {i}:\n{doc.page_content}")

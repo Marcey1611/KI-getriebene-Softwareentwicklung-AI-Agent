@@ -42,7 +42,13 @@ def extract_appointment_from_json(path: str = "email.json") -> str:
     subject = data.get("subject", "")
     body = data.get("body", "")
     email_text = f"{subject}\n{body}".strip()
-    return chain.invoke({"email": email_text})
+    print("Prompt input:", email_text)
+    try:
+        return chain.invoke({"email": email_text})
+    except Exception as e:
+        print("❌ Fehler bei LLM:", e)
+        return "Fehler bei der Extraktion"
+
 
 # ✅ NEU: für direkten Text
 def extract_appointment_from_text(email_text: str) -> str:

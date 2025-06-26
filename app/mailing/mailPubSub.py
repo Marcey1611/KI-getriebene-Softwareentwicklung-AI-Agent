@@ -43,7 +43,7 @@ class MailPubSub:
 
         watch_request = {
             'labelIds': ['INBOX'],
-            'topicName': 'projects/noah-ai-agent/topics/gmail-notify'
+            'topicName': 'projects/noah-ai-agent-464016/topics/gmail-notify'
         }
         response = self.gmail_service.users().watch(userId='me', body=watch_request).execute()
         print("✅ Watch activated:", response)
@@ -53,7 +53,7 @@ class MailPubSub:
 
         client_options = ClientOptions(api_endpoint="pubsub.googleapis.com:443")
         self.subscriber = pubsub_v1.SubscriberClient(credentials=pubsub_creds,client_options=client_options)
-        self.subscription_path = self.subscriber.subscription_path('noah-ai-agent', 'gmail-notify-sub')
+        self.subscription_path = self.subscriber.subscription_path('noah-ai-agent-464016', 'gmail-notify-sub')
         print("Done Init")
 
     def callback(self,message):
@@ -81,6 +81,7 @@ class MailPubSub:
         print("Listening for messages...")
         try:
             streaming_pull_future.result()
-        except KeyboardInterrupt:
+        except KeyboardInterrupt as e:
+            print(f"Shutting down subscription: {e}")
             streaming_pull_future.cancel()
 
