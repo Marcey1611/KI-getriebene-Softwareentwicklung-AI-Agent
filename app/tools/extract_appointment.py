@@ -12,38 +12,42 @@ api_key = os.getenv("GROQ_API_KEY")
 # LLM initialisieren
 llm = ChatGroq(api_key=api_key, model="llama3-8b-8192")
 
-# Prompt definieren
 prompt = PromptTemplate.from_template("""
-Du bekommst eine E-Mail und sollst daraus folgende Felder im Klartext extrahieren:
-- summary (Titel des Termins)
-- start_datetime (z.B. 2025-06-25T10:00:00+02:00)
-- end_datetime (z.B. 2025-06-25T10:00:00+02:00)
-- timezone(default Berlin)
-- location (wenn vorhanden)
-- description (Von wem kommt die Mail und was wird passieren)
-und das bitte als Json.
-Mach das bitte auch wenn das nicht direkt ein Termin sondern eine Einladung ist.
-Wenn nichts von einem ende drin steht dann überlege dir wie lange so ein Termin in der regel dauert.
+You are an assistant that extracts calendar event data from emails.
 
-E-Mail:
-"{email}"
-""")
+Your task is to extract and return the following fields in JSON format:
+- summary: The title or subject of the appointment or meeting
+- start_datetime: Start time in ISO 8601 format (e.g. 2025-06-25T10:00:00+02:00)
+- end_datetime: End time in ISO 8601 format; estimate if not explicitly given
+- timezone: Timezone of the event (default to 'Europe/Berlin' if unclear)
+- location: Location or address (if available. If not put an empty String)
+- description: What the event is about
 
-# Chain aufbauen
-parser = StrOutputParser()
-chain = prompt | llm | parser
+Even if the email is an invitation or informal scheduling message, do your best to infer these fields.
 
-# Hauptfunktion: liest automatisch aus Datei, analysiert, gibt Ergebnis zurück
-# ... (oben bleibt gleich)
+Input email:
+\"\"\"{email}\"\"\"
+""".strip())
 
-def extract_appointment_from_json(path: str = "email.json") -> str:
-    with open(path, "r", encoding="utf-8") as f:
-        data = json.load(f)
-    subject = data.get("subject", "")
-    body = data.get("body", "")
-    email_text = f"{subject}\n{body}".strip()
-    return chain.invoke({"email": email_text})
+chain = prompt | llm | StrOutputParser()
 
-# ✅ NEU: für direkten Text
-def extract_appointment_from_text(email_text: str) -> str:
-    return chain.invoke({"email": email_text})
+
+def extract_appointment_from_text(email_text: str) -> dict:
+    if not email_text.strip():
+        raise ValueError("Email text cannot be empty.")
+    result_str = chain.invoke({"email": email_text})
+
+    # Versuch, JSON-String zu extrahieren falls umgeben von Text
+    try:
+        # Falls result_str nur JSON ist:
+        return json.loads(result_str)
+    except json.JSONDecodeError:
+        # Versuch, JSON-Teil aus Text zu extrahieren (z.B. mit Regex)
+        import re
+        match = re.search(r'\{.*\}', result_str, re.DOTALL)
+        if match:
+            try:
+                return json.loads(match.group())
+            except json.JSONDecodeError:
+                pass
+        raise ValueError(f"Failed to parse LLM output as JSON. Output was: {result_str}")

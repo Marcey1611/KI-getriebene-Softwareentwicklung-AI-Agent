@@ -36,7 +36,7 @@ def get_google_credentials(token_file: str, scopes: list, client_secrets_file: s
 get_google_credentials(
     token_file=os.getenv("GOOGLE_CALENDAR_TOKEN"),
     client_secrets_file=os.getenv("GOOGLE_CREDENTIALS"),
-    scopes=["https://www.googleapis.com/auth/calendar.events"]
+    scopes=["https://www.googleapis.com/auth/calendar"]
 )
 get_google_credentials(
     token_file=os.getenv("GOOGLE_MAIL_TOKEN"),

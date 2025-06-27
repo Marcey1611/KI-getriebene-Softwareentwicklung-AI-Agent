@@ -1,12 +1,27 @@
-from google.oauth2 import service_account
-from google.cloud import pubsub_v1
 import json
-from app.tools.agent_runner import run_agent_executor
-from langchain_google_community.gmail.utils import get_gmail_credentials, build_resource_service
-from langchain_google_community.gmail.get_message import GmailGetMessage
-import os
+from google.oauth2 import service_account
 from google.api_core.client_options import ClientOptions
+from google.cloud import pubsub_v1
+from google.oauth2.credentials import Credentials
+from google.auth.transport.requests import Request
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
+from app.tools.agent_runner import AgentRunner
+import os
 
+def get_gmail_credentials(token_file, client_secrets_file, scopes):
+    creds = None
+    if os.path.exists(token_file):
+        creds = Credentials.from_authorized_user_file(token_file, scopes)
+    if not creds or not creds.valid:
+        if creds and creds.expired and creds.refresh_token:
+            creds.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(client_secrets_file, scopes)
+            creds = flow.run_local_server(port=0)
+        with open(token_file, 'w') as token:
+            token.write(creds.to_json())
+    return creds
 
 processed_message_ids = set()
 
@@ -32,20 +47,13 @@ def get_new_messages_since_history(gmail_service, user_id, start_history_id):
 
     return messages
 
-class MailPubSub:
-
-    def __init__(self):
-        gmail_creds = get_gmail_credentials(
-            token_file=os.getenv("GOOGLE_MAIL_TOKEN"),
-            client_secrets_file=os.getenv("GOOGLE_CREDENTIALS"),
-            scopes=["https://mail.google.com/"]
-        )
-        gmail_service = build_resource_service(gmail_creds)
-        self.gmail_service = gmail_service
-
-        self.gmail_get_message = GmailGetMessage(api_resource=self.gmail_service)
-
-
+class GmailPubSub:
+    def __init__(self,agent:AgentRunner):
+        self.last_processed_history_id=None
+        self.agent = agent
+        creds = get_gmail_credentials(os.getenv("GOOGLE_MAIL_TOKEN"),os.getenv("GOOGLE_CREDENTIALS"),["https://mail.google.com/"])
+        #creds = get_gmail_credentials("../../ai_agent_config/google-mail-token.json","../../ai_agent_config/google-credentials.json",["https://mail.google.com/"])
+        self.gmail_service = build("gmail", "v1", credentials=creds)
         watch_request = {
             'labelIds': ['INBOX'],
             'topicName': 'projects/noah-ai-agent/topics/gmail-notify'
@@ -53,13 +61,13 @@ class MailPubSub:
         response = self.gmail_service.users().watch(userId='me', body=watch_request).execute()
         print("✅ Watch activated:", response)
         self.last_processed_history_id = int(response['historyId'])
-
         pubsub_creds = service_account.Credentials.from_service_account_file(os.getenv("GOOGLE_SERVICE_ACCOUNT"))
-
+        #pubsub_creds = service_account.Credentials.from_service_account_file("../../ai_agent_config/google-service-account.json")
         client_options = ClientOptions(api_endpoint="pubsub.googleapis.com")
         self.subscriber = pubsub_v1.SubscriberClient(credentials=pubsub_creds,client_options=client_options)
-        self.subscription_path = self.subscriber.subscription_path('noah-ai-agent', 'gmail-notify-sub')
+        self.subscription_path = self.subscriber.subscription_path(os.getenv('PROJECT_ID'), os.getenv('YOUR_TOPIC_NAME'))
         print("Done Init")
+
 
     def callback(self,message):
         try:
@@ -69,19 +77,20 @@ class MailPubSub:
             history_id = json_data.get("historyId")
             email_address = json_data.get("emailAddress")
             print(f"📬 Gmail-Update: {email_address}, History ID: {history_id}")
-
+#
             new_message_ids = get_new_messages_since_history(self.gmail_service, 'me', self.last_processed_history_id)
             for ids in new_message_ids:
                 print("E-Mail ID:", ids)
-                run_agent_executor(ids)
+                self.agent.run_agent_executor(ids)
             self.last_processed_history_id = history_id
 
         except Exception as e:
+            print(str(message.data))
             print("Error:", e)
         finally:
             message.ack()
 
-    def spinup_subscription(self):
+    def run(self):
         streaming_pull_future = self.subscriber.subscribe(self.subscription_path, callback=self.callback)
         print("Listening for messages...")
         try:
