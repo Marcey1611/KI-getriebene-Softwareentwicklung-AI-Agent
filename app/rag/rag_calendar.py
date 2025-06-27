@@ -1,5 +1,6 @@
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
+from langchain_ollama import OllamaEmbeddings
 from langchain_google_community.calendar.utils import (
     get_google_credentials, build_resource_service
 )
@@ -33,7 +34,13 @@ def init_calendar_vectorstore():
         loc = event.get("location", "")
         texts.append(f"{start}\n{summary}\n{desc}\n{loc}")
 
-    embeddings = OpenAIEmbeddings()
+    llm_choice = os.getenv("LLM_CHOICE")
+    embeddings = None
+    match llm_choice:
+        case "OLLAMA":
+            embeddings = OllamaEmbeddings(model=os.getenv("EMBEDDING_LLM_MODEL"),base_url=os.getenv("OLLAMA_URL"))
+        case "OPENAI":
+            embeddings = OpenAIEmbeddings()
     vectorstore = FAISS.from_texts(texts, embeddings)
 
     # Speichern
@@ -42,7 +49,13 @@ def init_calendar_vectorstore():
     return vectorstore
 
 def load_vectorstore():
-    embeddings = OpenAIEmbeddings()
+    llm_choice = os.getenv("LLM_CHOICE")
+    embeddings = None
+    match llm_choice:
+        case "OLLAMA":
+            embeddings = OllamaEmbeddings(model=os.getenv("EMBEDDING_LLM_MODEL"), base_url=os.getenv("OLLAMA_URL"))
+        case "OPENAI":
+            embeddings = OpenAIEmbeddings()
     return FAISS.load_local(
         folder_path=FAISS_INDEX_PATH,
         embeddings=embeddings,

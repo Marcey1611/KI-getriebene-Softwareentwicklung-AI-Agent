@@ -50,8 +50,6 @@ class AgentRunner:
         match llm_choice:
             case "OLLAMA":
                 llm = ChatOllama(model=os.getenv("LLM_MODEL"),base_url=os.getenv("OLLAMA_URL"))
-            case "GROQ":
-                llm = ChatGroq(model=os.getenv("LLM_MODEL"),api_key=os.getenv("GROQ_API_KEY"))
             case "OPENAI":
                 llm = ChatOpenAI(model=os.getenv("LLM_MODEL"),api_key=os.getenv("OPENAI_API_KEY"))
         resource = build_resource_service(credentials=credentials)

@@ -65,7 +65,7 @@ class GmailPubSub:
         #pubsub_creds = service_account.Credentials.from_service_account_file("../../ai_agent_config/google-service-account.json")
         client_options = ClientOptions(api_endpoint="pubsub.googleapis.com")
         self.subscriber = pubsub_v1.SubscriberClient(credentials=pubsub_creds,client_options=client_options)
-        self.subscription_path = self.subscriber.subscription_path('noah-ai-agent', 'gmail-notify-sub')
+        self.subscription_path = self.subscriber.subscription_path(os.getenv('PROJECT_ID'), os.getenv('YOUR_TOPIC_NAME'))
         print("Done Init")
 
 
