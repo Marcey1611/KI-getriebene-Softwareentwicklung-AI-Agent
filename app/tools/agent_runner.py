@@ -1,18 +1,17 @@
 import os
 from datetime import datetime
-from multiprocessing import Process
-from multiprocessing import Queue
-from langchain_groq import ChatGroq
 from langchain_openai import ChatOpenAI
 from langchain_ollama import ChatOllama
+from langchain_google_community import CalendarToolkit
+
 from langchain_google_community import GmailToolkit
 from langchain_google_community.gmail.utils import (
     get_gmail_credentials,
     build_resource_service,
 )
+from langchain_google_community.calendar.utils import get_google_credentials, build_resource_service
 from langchain_core.prompts import ChatPromptTemplate
 from app.tools.agent_prompts import system_prompt, retrieve_message_prompt,analyze_message_prompt,create_event_prompt_template, check_conflicts_prompt_template, add_event_to_vectorstore_prompt_template
-from app.custom_calendar_tools.calendar_tool import cal_toolkit
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
 from app.rag.rag_calendar import init_calendar_vectorstore
@@ -25,6 +24,16 @@ credentials = get_gmail_credentials(
     client_secrets_file=os.getenv("GOOGLE_CREDENTIALS"),
     scopes=["https://mail.google.com/"],
 )
+cal_credentials = get_google_credentials(
+    token_file=os.getenv("GOOGLE_CALENDAR_TOKEN"),
+    scopes=["https://www.googleapis.com/auth/calendar"],
+    client_secrets_file=os.getenv("GOOGLE_CREDENTIALS")
+)
+
+service = build_resource_service(cal_credentials)
+cal_toolkit = CalendarToolkit(api_resource=service)
+calendar_tool = [t for t in cal_toolkit.get_tools() if t.name == "create_calendar_event"][0]
+
 
 check_conflicts_tool = Tool(
     name="check_conflicts",
@@ -54,6 +63,9 @@ class AgentRunner:
                 llm = ChatOpenAI(model=os.getenv("LLM_MODEL"),api_key=os.getenv("OPENAI_API_KEY"))
         resource = build_resource_service(credentials=credentials)
         toolkit = GmailToolkit(api_resource=resource)
+        service = build_resource_service(cal_credentials)
+        cal_toolkit = CalendarToolkit(api_resource=service)
+
         gmail_tools = toolkit.get_tools()
         tools = gmail_tools + cal_toolkit.get_tools()
         tools.append(check_conflicts_tool)
