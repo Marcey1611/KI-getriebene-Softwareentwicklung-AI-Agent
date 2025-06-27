@@ -80,6 +80,7 @@ class AgentRunner:
         email_content = retrieve_response["messages"][-1].content
         print(email_content)
 
+
         analyze_prompt = analyze_message_prompt.format_messages()
         analyze_response = self.app.invoke({"messages": analyze_prompt}, config=config)
         event_extraction = analyze_response["messages"][-1].content
