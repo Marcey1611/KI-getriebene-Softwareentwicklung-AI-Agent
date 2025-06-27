@@ -24,7 +24,17 @@ analyze_message_prompt = HumanMessagePromptTemplate.from_template(
     "'No calendar entry found. No action taken.'"
 )
 
+check_conflicts_prompt_template = HumanMessagePromptTemplate.from_template(
+    "Use `check_conflicts_tool` to check whether the appointment period is already booked.\n"
+    "If the appointment period is already booked, respond with: \n"
+    "Appointment period is already booked."
+)
+
 create_event_prompt_template = HumanMessagePromptTemplate.from_template(
     "Now call the `create_calendar_event` tool with these values.\n"
-    "Ensure that all datetime values use ISO 'YYYY-MM-DD HH:MM:SS' format, and attendees is a list of email strings."
+    "Ensure that all datetime values use ISO 'YYYY-MM-DD HH:MM:SS' format, and attendees is a list of email strings.\n"
+)
+
+add_event_to_vectorstore_prompt_template = HumanMessagePromptTemplate.from_template(
+    "After creating a calendar entry, save it with `add_event_to_vectorstore_tool` for future vector searches."
 )
