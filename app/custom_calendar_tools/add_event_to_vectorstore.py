@@ -21,6 +21,7 @@ def add_event_to_vectorstore(json_str: str) -> str:
         text = f"{start_datetime}\n{summary}\n{description}\n{location}"
         vectorstore = load_vectorstore()
         vectorstore.add_texts([text])
+        vectorstore.save_local("calendar_faiss_index")
         return "✅ Termin im Vektorstore gespeichert."
     except Exception as e:
         return f"Fehler beim Speichern im Vektorstore: {e}"
