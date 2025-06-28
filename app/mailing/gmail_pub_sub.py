@@ -1,3 +1,4 @@
+#app/mailing/gmail_pub_sub.py
 import json
 from google.oauth2 import service_account
 from google.api_core.client_options import ClientOptions
@@ -6,7 +7,7 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-from app.tools.agent_runner import AgentRunner
+from app.agent.agent_runner import AgentRunner
 import os
 from app.utils.logger import logger
 
@@ -54,7 +55,6 @@ class GmailPubSub:
         self.last_processed_history_id=None
         self.agent = agent
         creds = get_gmail_credentials(os.getenv("GOOGLE_MAIL_TOKEN"),os.getenv("GOOGLE_CREDENTIALS"),["https://mail.google.com/"])
-        #creds = get_gmail_credentials("../../ai_agent_config/google-mail-token.json","../../ai_agent_config/google-credentials.json",["https://mail.google.com/"])
         self.gmail_service = build("gmail", "v1", credentials=creds)
         watch_request = {
             'labelIds': ['INBOX'],
@@ -64,7 +64,6 @@ class GmailPubSub:
         logger.debug("Watch activated: %s", response)
         self.last_processed_history_id = int(response['historyId'])
         pubsub_creds = service_account.Credentials.from_service_account_file(os.getenv("GOOGLE_SERVICE_ACCOUNT"))
-        #pubsub_creds = service_account.Credentials.from_service_account_file("../../ai_agent_config/google-service-account.json")
         client_options = ClientOptions(api_endpoint="pubsub.googleapis.com")
         self.subscriber = pubsub_v1.SubscriberClient(credentials=pubsub_creds,client_options=client_options)
         self.subscription_path = self.subscriber.subscription_path(os.getenv('PROJECT_ID'), os.getenv('YOUR_TOPIC_NAME'))
@@ -79,7 +78,7 @@ class GmailPubSub:
             history_id = json_data.get("historyId")
             email_address = json_data.get("emailAddress")
             logger.debug("Gmail-Update: %s, History ID: %s", email_address, history_id)
-#
+
             new_message_ids = get_new_messages_since_history(self.gmail_service, 'me', self.last_processed_history_id)
             for id in new_message_ids:    
                 logger.info("Starting process for email with id: %s\n\n\n", id)

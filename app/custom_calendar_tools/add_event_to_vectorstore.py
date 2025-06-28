@@ -1,3 +1,4 @@
+#app/custom_calendar_tools/add_event_to_vectorstore.py
 from langchain.tools import tool
 from app.rag.rag_calendar import load_vectorstore, print_all_vectorstore_texts
 import json
@@ -5,10 +6,7 @@ from app.utils.logger import logger
 
 @tool
 def add_event_to_vectorstore(json_str: str) -> str:
-    """
-    Speichert einen Kalender-Termin im Vektorstore.
-    Erwartet ein JSON mit: summary, start_datetime, description, location.
-    """
+    """Saves a calendar event to the vector store. Expects a JSON with: summary, start_datetime, description, location."""
     data = extract_clean_json(json_str)
     logger.debug(" - Extracted JSON: %s", data)
     if isinstance(data, str):
@@ -45,5 +43,5 @@ def extract_clean_json(s: str) -> str | None:
             brace_count -= 1
             if brace_count == 0:
                 return s[:i+1]
-            
+  
     return None

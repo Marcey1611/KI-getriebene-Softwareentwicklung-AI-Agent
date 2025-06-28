@@ -1,16 +1,12 @@
+#app/agent/agent_runner.py
 import os
 from datetime import datetime
-from multiprocessing import Process
-from multiprocessing import Queue
 from langchain_openai import ChatOpenAI
 from langchain_ollama import ChatOllama
 from langchain_google_community import GmailToolkit
-from langchain_google_community.gmail.utils import (
-    get_gmail_credentials,
-    build_resource_service,
-)
+from langchain_google_community.gmail.utils import get_gmail_credentials, build_resource_service
 from langchain_core.prompts import ChatPromptTemplate
-from app.tools.agent_prompts import system_prompt, retrieve_message_prompt,analyze_message_prompt,create_event_prompt_template, check_conflicts_prompt_template, add_event_to_vectorstore_prompt_template
+from app.agent.agent_prompts import system_prompt, retrieve_message_prompt,analyze_message_prompt,create_event_prompt_template, check_conflicts_prompt_template, add_event_to_vectorstore_prompt_template
 from app.custom_calendar_tools.calendar_tool import cal_toolkit
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.prebuilt import create_react_agent
@@ -29,13 +25,13 @@ credentials = get_gmail_credentials(
 check_conflicts_tool = Tool(
     name="check_conflicts",
     func=check_conflicts,
-    description="Prüft, ob zu dem angegebenen Zeitpunkt bereits ein Termin im Kalender existiert. "
+    description="Checks whether an appointment already exists in the calendar at the specified time. "
 )
 
 add_event_to_vectorstore_tool = Tool(
     name="add_event_to_vectorstore",
     func=add_event_to_vectorstore,
-    description="Speichert einen Kalender-Termin im Vektorstore. Erwartet ein JSON mit: summary, start_datetime, description, location."
+    description="Saves a calendar event to the vector store. Expects a JSON with: summary, start_datetime, description, location."
 )
 
 class AgentRunner:

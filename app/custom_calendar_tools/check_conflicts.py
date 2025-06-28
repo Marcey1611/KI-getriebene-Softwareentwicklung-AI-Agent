@@ -1,3 +1,4 @@
+#app/custom_calendar_tools/check_conflicts.py
 from langchain.tools import tool
 from app.rag.rag_calendar import get_similar_events
 from dateutil import parser
@@ -5,7 +6,7 @@ from app.utils.logger import logger
 
 @tool
 def check_conflicts(start_datetime: str) -> str:
-    """Prüft, ob zu dem angegebenen Zeitpunkt bereits ein Termin im Kalender existiert."""
+    """Checks whether an appointment already exists in the calendar at the specified time."""
     try:
         logger.debug(" - Checking conflict for start datetime: %s", start_datetime)
         target_time = parser.parse(start_datetime).strftime("%Y-%m-%d %H:%M:%S")

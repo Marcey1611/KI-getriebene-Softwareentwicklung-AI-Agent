@@ -1,3 +1,4 @@
+#app/utils/logger.py
 import logging
 import sys
 import os
@@ -5,7 +6,6 @@ import os
 def setup_logger():
     logger = logging.getLogger("ai-mail-agent")
 
-    # Hole das Loglevel aus der Umgebung, z. B. INFO, DEBUG, WARNING
     log_level_str = os.getenv("LOG_LEVEL", "INFO").upper()
     log_level = getattr(logging, log_level_str, logging.INFO)
     logger.setLevel(log_level)

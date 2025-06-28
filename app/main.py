@@ -1,9 +1,8 @@
-
+#app/main.py
 from app.mailing.gmail_pub_sub import GmailPubSub
-from app.tools.agent_runner import AgentRunner
+from app.agent.agent_runner import AgentRunner
 from dotenv import load_dotenv
 from app.utils.logger import logger
-
 
 def main():
     logger.debug("------------------------------ Initializing ------------------------------")

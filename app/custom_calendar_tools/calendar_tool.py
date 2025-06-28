@@ -1,9 +1,7 @@
-# calendar_tool.py
+#app/custom_calendar_tools/calendar_tool.py
 from langchain_google_community.calendar.utils import get_google_credentials, build_resource_service
 from langchain_google_community import CalendarToolkit
 from langchain_core.tools import tool
-from datetime import datetime
-import json
 import os
 
 cal_credentials = get_google_credentials(

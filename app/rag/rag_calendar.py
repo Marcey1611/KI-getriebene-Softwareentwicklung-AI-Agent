@@ -1,3 +1,4 @@
+#app/rag/rag_calendar.py
 from langchain_community.vectorstores import FAISS
 from langchain_openai import OpenAIEmbeddings
 from langchain_ollama import OllamaEmbeddings
@@ -5,7 +6,6 @@ from langchain_google_community.calendar.utils import (
     get_google_credentials, build_resource_service
 )
 import os
-import pickle
 from datetime import datetime, timedelta
 from app.utils.logger import logger
 
@@ -63,7 +63,7 @@ def load_vectorstore():
     vectorestore = FAISS.load_local(
         folder_path=FAISS_INDEX_PATH,
         embeddings=embeddings,
-        allow_dangerous_deserialization=True  # <- Explizit erlauben
+        allow_dangerous_deserialization=True # This should be used with caution, ensure the source is trusted
     )
     logger.debug("Vectorstore loaded successfully.")
     return vectorestore
