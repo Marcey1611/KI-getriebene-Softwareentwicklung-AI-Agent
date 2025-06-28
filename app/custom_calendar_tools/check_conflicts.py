@@ -1,27 +1,22 @@
-from langchain.tools import tool, Tool
+from langchain.tools import tool
 from app.rag.rag_calendar import get_similar_events
-
 from dateutil import parser
+from app.utils.logger import logger
 
 @tool
 def check_conflicts(start_datetime: str) -> str:
     """Prüft, ob zu dem angegebenen Zeitpunkt bereits ein Termin im Kalender existiert."""
     try:
-        print(f"Prüfe Konflikte für: {start_datetime}")
-
-        # Startzeit parsen und im richtigen Format (ohne 'T') speichern
+        logger.debug(" - Checking conflict for start datetime: %s", start_datetime)
         target_time = parser.parse(start_datetime).strftime("%Y-%m-%d %H:%M:%S")
-        print(f"Vergleichszeitpunkt (formatiert): {target_time}")
-
         matches = get_similar_events(start_datetime, k=100)
 
         for doc in matches:
             first_line = doc.page_content.split("\n")[0].strip()
-            print("Gespeicherte Event-Zeit:", first_line)
             if first_line == target_time:
-                return "⚠️ Konflikt: Bereits ein Termin zum gleichen Zeitpunkt vorhanden."
+                return "Found a conflict with an existing event for the start datetime."
+        return "No conflicts were found for the specified start datetime."
 
-        return "✅ Kein Konflikt gefunden."
-
-    except Exception as e:
-        return f"Fehler bei der Konfliktprüfung: {e}"
+    except Exception as exception:
+        logger.error(" - Error checking conflicts: %s", exception)
+        return "Error checking conflicts!"

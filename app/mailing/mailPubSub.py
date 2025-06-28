@@ -48,7 +48,7 @@ class MailPubSub:
 
         watch_request = {
             'labelIds': ['INBOX'],
-            'topicName': 'projects/noah-ai-agent/topics/gmail-notify'
+            'topicName': 'projects/noah-ai-agent-464016/topics/gmail-notify'
         }
         response = self.gmail_service.users().watch(userId='me', body=watch_request).execute()
         print("✅ Watch activated:", response)
@@ -58,7 +58,7 @@ class MailPubSub:
 
         client_options = ClientOptions(api_endpoint="pubsub.googleapis.com")
         self.subscriber = pubsub_v1.SubscriberClient(credentials=pubsub_creds,client_options=client_options)
-        self.subscription_path = self.subscriber.subscription_path('noah-ai-agent', 'gmail-notify-sub')
+        self.subscription_path = self.subscriber.subscription_path('noah-ai-agent-464016', 'gmail-notify-sub')
         print("Done Init")
 
     def callback(self,message):

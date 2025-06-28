@@ -8,6 +8,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from app.tools.agent_runner import AgentRunner
 import os
+from app.utils.logger import logger
 
 def get_gmail_credentials(token_file, client_secrets_file, scopes):
     creds = None
@@ -49,6 +50,7 @@ def get_new_messages_since_history(gmail_service, user_id, start_history_id):
 
 class GmailPubSub:
     def __init__(self,agent:AgentRunner):
+        logger.info("Initializing Gmail Pub/Sub...")
         self.last_processed_history_id=None
         self.agent = agent
         creds = get_gmail_credentials(os.getenv("GOOGLE_MAIL_TOKEN"),os.getenv("GOOGLE_CREDENTIALS"),["https://mail.google.com/"])
@@ -59,14 +61,14 @@ class GmailPubSub:
             'topicName': 'projects/noah-ai-agent/topics/gmail-notify'
         }
         response = self.gmail_service.users().watch(userId='me', body=watch_request).execute()
-        print("✅ Watch activated:", response)
+        logger.debug("Watch activated: %s", response)
         self.last_processed_history_id = int(response['historyId'])
         pubsub_creds = service_account.Credentials.from_service_account_file(os.getenv("GOOGLE_SERVICE_ACCOUNT"))
         #pubsub_creds = service_account.Credentials.from_service_account_file("../../ai_agent_config/google-service-account.json")
         client_options = ClientOptions(api_endpoint="pubsub.googleapis.com")
         self.subscriber = pubsub_v1.SubscriberClient(credentials=pubsub_creds,client_options=client_options)
         self.subscription_path = self.subscriber.subscription_path(os.getenv('PROJECT_ID'), os.getenv('YOUR_TOPIC_NAME'))
-        print("Done Init")
+        logger.info("Successfully initialized Gmail Pub/Sub.\n")
 
 
     def callback(self,message):
@@ -76,23 +78,22 @@ class GmailPubSub:
 
             history_id = json_data.get("historyId")
             email_address = json_data.get("emailAddress")
-            print(f"📬 Gmail-Update: {email_address}, History ID: {history_id}")
+            logger.debug("Gmail-Update: %s, History ID: %s", email_address, history_id)
 #
             new_message_ids = get_new_messages_since_history(self.gmail_service, 'me', self.last_processed_history_id)
-            for ids in new_message_ids:
-                print("E-Mail ID:", ids)
-                self.agent.run_agent_executor(ids)
+            for id in new_message_ids:    
+                logger.info("Starting process for email with id: %s\n\n\n", id)
+                self.agent.run_agent_executor(id)
             self.last_processed_history_id = history_id
 
-        except Exception as e:
-            print(str(message.data))
-            print("Error:", e)
+        except Exception as exception:
+            logger.error("Error processing message: %s", exception)
         finally:
             message.ack()
 
     def run(self):
         streaming_pull_future = self.subscriber.subscribe(self.subscription_path, callback=self.callback)
-        print("Listening for messages...")
+        logger.info("Listening for messages...")
         try:
             streaming_pull_future.result()
         except KeyboardInterrupt:
