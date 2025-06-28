@@ -74,7 +74,7 @@ class AgentRunner:
             retrieve_message_prompt
         ])
 
-        logger.debug("------------------------------ Retrieving email content ------------------------------")
+        logger.debug("------------------------------ Retrieving content ------------------------------")
         logger.info("Retrieving email content for message ID: %s", msg_id)
         retrieve_prompt =  retrieve_prompt_template.format_messages(current_time=now,msg_id=msg_id)
         retrieve_response = self.app.invoke({"messages": retrieve_prompt},config=config,)
@@ -82,7 +82,7 @@ class AgentRunner:
         logger.debug(f"Result retrieving email content: {email_content}")
         logger.info("Successfully retrieved email content. Continuing...\n\n\n")
 
-        logger.debug("------------------------------ Analyzing email content ------------------------------")
+        logger.debug("------------------------------ Analyzing content ------------------------------")
         logger.info("Analyzing email content for message ID: %s", msg_id)
         analyze_prompt = analyze_message_prompt.format_messages()
         analyze_response = self.app.invoke({"messages": analyze_prompt}, config=config)
@@ -105,7 +105,7 @@ class AgentRunner:
             return
         logger.info("Appointment period is available. Continuing...\n\n\n")
 
-        logger.debug("------------------------------ Creating calendar event ------------------------------")
+        logger.debug("------------------------------ Creating event ------------------------------")
         logger.info("Creating calendar event for message ID: %s", msg_id)
         create_event_prompt = create_event_prompt_template.format_messages()
         create_event_response = self.app.invoke({"messages": create_event_prompt}, config=config)

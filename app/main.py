@@ -6,13 +6,13 @@ from app.utils.logger import logger
 
 
 def main():
-    logger.debug("------------------------------ Initializing AI Mail Agent ------------------------------")
+    logger.debug("------------------------------ Initializing ------------------------------")
     logger.info("Starting initialization of AI Mail Agent...\n")
     load_dotenv()
     agent = AgentRunner()
     gmail_pub_sub = GmailPubSub(agent=agent)
     logger.info("Successfully initialized AI Mail Agent. Starting routine...\n\n\n")
-    logger.debug("------------------------------ Waiting for emails ------------------------------")
+    logger.debug("------------------------------ Waiting ------------------------------")
     gmail_pub_sub.run()
 
 
