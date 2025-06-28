@@ -102,6 +102,8 @@ class AgentRunner:
         if "Appointment period is already booked." in conflicts_check:
             logger.info("Appointment period is already booked. Halting processing for current email.")
             logger.info("Finisched process for current email.\n\n\n")
+            logger.debug("------------------------------ Waiting ------------------------------")
+            logger.info("Listening for messages...")
             return
         logger.info("Appointment period is available. Continuing...\n\n\n")
 
@@ -122,3 +124,5 @@ class AgentRunner:
         logger.info("Added event to vectorstore successfully.\n\n\n")
 
         logger.info("Finisched process for current email successfully.\n\n\n")
+        logger.debug("------------------------------ Waiting ------------------------------")
+        logger.info("Listening for messages...")
