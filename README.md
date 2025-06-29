@@ -3,6 +3,19 @@
 ## Projektidee
 Der Gmail-Agent ermöglicht es, automatisch erkannte Terminvorschläge aus E-Mails direkt in den Google-Kalender einzutragen. Nach der einmaligen Verknüpfung mit einem Google-Account empfängt und analysiert der Agent selbstständig neue E-Mails. Erkennt er dabei einen Terminvorschlag, extrahiert er alle relevanten Informationen und erstellt automatisch einen entsprechenden Kalendereintrag.
 
+## Was funktioniert
+- Vektorstore mit bestehenden Kalenderterminen füllen
+- Mails empfangen
+- Termininformationen per LLM aus Mail filtern
+- Überprüfen ob Termin belegt ist
+- Kalendertermin mit wichtigsten Infos erstellen 
+
+## Future plannings
+- Vektorstore wird nicht geupdatet
+- Falsche Uhrzeit in vom LLM erstellten Kalenderterminen 
+
+## Architektur
+
 ## Quickstart Guide
 ### 1. Google Account erstellen
 
