@@ -5,14 +5,14 @@ Der Gmail-Agent ermöglicht es, automatisch erkannte Terminvorschläge aus E-Mai
 
 ## Was funktioniert
 - Vektorstore mit bestehenden Kalenderterminen füllen
+- Vektorstore wird mit neuen Kalenderterminen geupdatet
 - Mails empfangen
 - Termininformationen per LLM aus Mail filtern
 - Überprüfen ob Termin belegt ist
 - Kalendertermin mit wichtigsten Infos erstellen 
 
 ## Future plannings
-- Vektorstore wird nicht geupdatet
-- Falsche Uhrzeit in vom LLM erstellten Kalenderterminen 
+- Falsche Uhrzeit in vom LLM erstellten Kalenderterminen (um 2h verschoben vermutlich wegen unterschiedlichen Zeitzonen)
 - Falls Termin belegt in Kalender neuen Vorschlagen
 
 ## Architektur
@@ -65,6 +65,7 @@ projects/**dein-projekt-id**/topics/gmail-notify
 
 ### 7. Agent starten
 - Im Root-Verzeichnis des Projekt **docker compose up** ausführen
+- Wird OpenAI verwendet: **docker compose up ai-mail-agent** 
 
 ### 8. Testen
 - Sende eine Test-Mail von einem beliebigen Absender
