@@ -9,6 +9,9 @@ Der Gmail-Agent ermöglicht es, automatisch erkannte Terminvorschläge aus E-Mai
 - Manuel Walser
 - Mike Lachmuth
 
+## Link zu Gitlab
+https://gitlab.rwu.de/ai-ki-swe/250620-langChain/ai-gmail-agent#
+
 ## Was funktioniert
 - Vektorstore mit bestehenden Kalenderterminen füllen
 - Vektorstore wird mit neuen Kalenderterminen geupdatet
